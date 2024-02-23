@@ -2,18 +2,23 @@ import "./styles.css";
 import NavBar from "../src/NavBar";
 import Footer from "../src/Footer";
 import { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
 import { SparklesCore } from "./ui/sparkles";
 
 export default function MyApp() {
   const [carsList, setCarsList] = useState(null);
+  const [duration, setDuration] = useState(1);
+  const [distance, setDistance] = useState(50);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/cars`)
+    fetch(
+      `http://localhost:3000/cars?duration=${duration}&distance=${distance}`
+    )
       .then((response) => response.json())
       .then((data) => {
         data && setCarsList(data);
       });
-  }, []);
+  }, [duration, distance]);
 
   let carsToDisplay;
   if (carsList) {
@@ -31,8 +36,12 @@ export default function MyApp() {
               <h2 className="card-title font-sans">
                 {data.brand} {data.model}
               </h2>
-              <p className="font-sans">Prix par jour : {priceInEuros} €</p>
+              <p className="font-sans">{priceInEuros}€ / jour</p>
               <p className="font-sans">{data.pricePerKm} € / Km</p>
+              {/* <p className="font-sans">
+                {data.availability.maxDuration} jour
+              </p>
+              <p className="font-sans">{data.availability.maxDistance} Km</p> */}
             </div>
           </div>
         </div>
@@ -44,7 +53,7 @@ export default function MyApp() {
     <div className="flex flex-col items-center justify-center">
       {/* NAVBAR */}
       <NavBar />
-      {/* Welcome Text with animation */}
+      {/* Welcome Text with animation ui.aceternity.com */}
       <div className="h-[30rem] w-full  flex flex-col items-center justify-center overflow-hidden rounded-md">
         <h1 className="md:text-7xl text-3xl lg:text-7xl font-bold font-sans text-center text-white relative z-20">
           Bienvenue sur Drivy
@@ -76,10 +85,54 @@ export default function MyApp() {
 
       {/* CARS CARDS  */}
       {carsToDisplay?.length > 0 && (
-        <div className="flex items-center justify-center h-[5rem] w-5/6">
+        <div className="flex flex-col items-center justify-between w-5/6 mb-4">
           <p className="font-sans text-white">
-            Voitures disponibles à la location : {carsToDisplay.length}
+            {carsToDisplay.length} Voitures disponibles à la location
           </p>
+          <div className="collapse ">
+            <input type="checkbox" />
+            <div className="collapse-title flex items-center justify-center text-center text-white font-medium">
+              <Icon icon="lets-icons:filter" width="25" height="25" />
+              Choisir la durée de location et la distance prévues
+            </div>
+            <div className="collapse-content">
+              <div className="flex items-center justify-center w-full">
+                <label className="form-control w-full max-w-xs mr-1.5">
+                  <div className="label">
+                    <span className="label-text text-white">
+                      Nombre de jour(s) de location
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    placeholder="Type here"
+                    className="input input-bordered w-full max-w-xs"
+                  />
+                </label>
+                <label className="form-control w-full max-w-xs">
+                  <div className="label">
+                    <span className="label-text text-white">
+                      Distance en Km
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    min="50"
+                    max="3000"
+                    step="50"
+                    value={distance}
+                    onChange={(e) => setDistance(Number(e.target.value))}
+                    placeholder="Type here"
+                    className="input input-bordered w-full max-w-xs"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       <div className="flex flex-wrap justify-center rounded-lg">
