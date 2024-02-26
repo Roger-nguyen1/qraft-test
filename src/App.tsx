@@ -1,16 +1,21 @@
 import "./styles.css";
 import { useState, useEffect } from "react";
 import NavBar from "../src/NavBar";
+import WelcomeText from "./WelcomeText";
 import Footer from "../src/Footer";
+import CarCard from "./CarCard";
 import { Icon } from "@iconify/react";
-import { SparklesCore } from "./ui/sparkles";
 import { DataCarType } from "../types/dataTypes";
+import { calculateDiscountPrice } from "../src/modules/calculateDiscountPrice";
 
 export default function MyApp() {
   const [carsList, setCarsList] = useState<DataCarType[]>(null);
   const [duration, setDuration] = useState<number>(1);
   const [distance, setDistance] = useState<number>(50);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
+  //API Request
   useEffect(() => {
     fetch(
       `http://localhost:3000/cars?duration=${duration}&distance=${distance}`
@@ -18,6 +23,12 @@ export default function MyApp() {
       .then((response) => response.json())
       .then((data) => {
         data && setCarsList(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error loading data:", error);
+        setErrorMessage("An error occurred while loading datas");
+        setLoading(false);
       });
   }, [duration, distance]);
 
@@ -28,89 +39,59 @@ export default function MyApp() {
       const pricePerDayInEuros: number = data.pricePerDay / 100;
       const pricePerKmInEuros: number = data.pricePerKm / 100;
       const altText: string = `${data.brand} ${data.model}`;
-      const totalRentalPrice: number =
-        data.pricePerDay * duration + data.pricePerKm * distance;
-      const totalPriceFixed = (totalRentalPrice / 100).toFixed(2);
+
+      //missing type of totalPriceWithReduction
+      const totalPriceWithReduction = (
+        (calculateDiscountPrice(duration, data.pricePerDay) +
+          data.pricePerKm * distance) /
+        100
+      ).toFixed(2);
 
       return (
-        <div className="m-1.5 " key={i}>
-          <div className="card w-96 bg-base-100 shadow-xl card hover:scale-105 hover:border hover:border-black cursor-pointer transition duration-300 ease-in-out">
-            <figure>
-              <img src={data.pictureUrl} alt={altText} />
-            </figure>
-            <div className="card-body font-sans">
-              <h2 className="card-title font-sans">
-                {data.brand} {data.model}
-              </h2>
-              <p>{pricePerDayInEuros} € / jour</p>
-              <p>{pricePerKmInEuros} € / Km</p>
-              <p>
-                Prix total de la location :{" "}
-                <span className="font-bold">{totalPriceFixed} €</span>
-              </p>
-              {/* <p className="font-sans">
-                {data.availability.maxDuration} jour
-              </p>
-              <p className="font-sans">{data.availability.maxDistance} Km</p> */}
-            </div>
-          </div>
-        </div>
+        <>
+          <CarCard
+            key={i}
+            pictureUrl={data.pictureUrl}
+            brand={data.brand}
+            model={data.model}
+            altText={altText}
+            pricePerDay={pricePerDayInEuros}
+            pricePerKm={pricePerKmInEuros}
+            totalPrice={totalPriceWithReduction}
+          />
+        </>
       );
     });
   }
 
   return (
     <div className="flex flex-col items-center justify-center">
-      {/* NAVBAR */}
+      {/* Navbar & Welcome */}
       <NavBar />
-      {/* Welcome Text with animation ui.aceternity.com */}
-      <div className="h-[30rem] w-full  flex flex-col items-center justify-center overflow-hidden rounded-md">
-        <h1 className="md:text-7xl text-3xl lg:text-7xl font-bold font-sans text-center text-white relative z-20">
-          Bienvenue sur Drivy
-        </h1>
-        <div className="w-[40rem] h-10 relative">
-          {/* Gradients */}
-          <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
-          <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
-          <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
-          <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px w-1/4" />
-
-          {/* Core component */}
-          <SparklesCore
-            background="transparent"
-            minSize={0.4}
-            maxSize={1}
-            particleDensity={1200}
-            className="w-full h-full"
-            particleColor="#FFFFFF"
-          />
-
-          {/* Radial Gradient to prevent sharp edges */}
-          <div className="absolute inset-0 w-full h-full [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
-        </div>
-        <p className="lg:text-xl m-3 text-center text-white px-3 font-sans">
-          Location de voiture entre particuliers et pros
-        </p>
-      </div>
-
-      {/* CARS CARDS  */}
+      <WelcomeText />
+      {/* Numbers of cars + Filter  */}
       {carsToDisplay?.length > 0 && (
-        <div className="flex flex-col items-center justify-between w-5/6 mb-4">
-          <p className="font-sans text-white">
-            {carsToDisplay.length} Voitures disponibles à la location
-          </p>
-          <div className="collapse ">
+        <div className="flex flex-col items-center justify-center w-5/6 mb-4">
+          <div>
+            {" "}
+            <p className="font-sans text-white">
+              {carsToDisplay.length} Cars available for rent
+            </p>
+          </div>
+          <div className="collapse">
             <input type="checkbox" />
             <div className="collapse-title flex items-center justify-center text-center text-white font-medium">
-              <Icon icon="lets-icons:filter" width="25" height="25" />
-              Choisir la durée de location et la distance prévues
+              <span className="flex items-center justify-center text-xs md:text-base p-2 border-2 rounded-lg">
+                <Icon icon="lets-icons:filter" width="25" height="25" /> Choose
+                the planned rental duration and distance{" "}
+              </span>
             </div>
-            <div className="collapse-content">
+            <div className="collapse-content flex flex-col items-center justify-center">
               <div className="flex items-center justify-center w-full">
                 <label className="form-control w-full max-w-xs mr-1.5">
                   <div className="label">
-                    <span className="label-text text-white">
-                      Nombre de jour(s) de location
+                    <span className="label-text text-xs md:text-base text-white">
+                      Number of rental day(s)
                     </span>
                   </div>
                   <input
@@ -125,8 +106,8 @@ export default function MyApp() {
                 </label>
                 <label className="form-control w-full max-w-xs">
                   <div className="label">
-                    <span className="label-text text-white">
-                      Distance en Km
+                    <span className="label-text text-xs md:text-base text-white">
+                      Distance in Km
                     </span>
                   </div>
                   <input
@@ -141,13 +122,34 @@ export default function MyApp() {
                   />
                 </label>
               </div>
+              <p className="italic text-xs md:text-sm text-white mt-3">
+                A discount is applied in the price per day : -10% after 1 day,
+                -30% after 4 days, -50% after 10 days!
+              </p>
             </div>
           </div>
         </div>
       )}
-      <div className="flex flex-wrap justify-center rounded-lg">
-        {carsToDisplay}
+      {/* Loading animation */}
+      <div className="flex flex-col items-center justify-center">
+        {loading && (
+          <>
+            <p className="text-white text-2xl font-semibold mb-4">Loading...</p>
+            <span className="loading loading-ring text-white loading-lg mb-10"></span>
+          </>
+        )}
       </div>
+      {/* Error message verification or Cars Cards */}
+      {errorMessage ? (
+        <>
+          <p className="mb-10 mx-1.5 text-white md:text-5xl text-3xl lg:text-5xl font-bold font-sans text-center">
+            {errorMessage}
+          </p>
+        </>
+      ) : (
+        <div className="flex flex-wrap justify-center">{carsToDisplay}</div>
+      )}
+
       {/* FOOTER */}
       <Footer />
     </div>

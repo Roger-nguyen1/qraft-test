@@ -35,7 +35,7 @@ export default function NavBar() {
         </div>
       </div>
       <div className="navbar-center">
-        <a className="btn btn-ghost text-2xl font-sans tracking-wider">Drivy</a>
+        <a className="btn btn-ghost text-4xl font-sans tracking-wider">Drivy</a>
       </div>
       <div className="navbar-end">
         <button className="btn btn-ghost btn-circle">
