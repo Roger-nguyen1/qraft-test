@@ -1,14 +1,15 @@
 import "./styles.css";
+import { useState, useEffect } from "react";
 import NavBar from "../src/NavBar";
 import Footer from "../src/Footer";
-import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { SparklesCore } from "./ui/sparkles";
+import { DataCarType } from "../types/dataTypes";
 
 export default function MyApp() {
-  const [carsList, setCarsList] = useState(null);
-  const [duration, setDuration] = useState(1);
-  const [distance, setDistance] = useState(50);
+  const [carsList, setCarsList] = useState<DataCarType[]>(null);
+  const [duration, setDuration] = useState<number>(1);
+  const [distance, setDistance] = useState<number>(50);
 
   useEffect(() => {
     fetch(
@@ -20,11 +21,16 @@ export default function MyApp() {
       });
   }, [duration, distance]);
 
+  //missing type of carsToDisplay
   let carsToDisplay;
   if (carsList) {
     carsToDisplay = carsList.map((data, i) => {
-      const priceInEuros = (data.pricePerDay / 100).toFixed(2);
-      const altText = `${data.brand} ${data.model}`;
+      const pricePerDayInEuros: number = data.pricePerDay / 100;
+      const pricePerKmInEuros: number = data.pricePerKm / 100;
+      const altText: string = `${data.brand} ${data.model}`;
+      const totalRentalPrice: number =
+        data.pricePerDay * duration + data.pricePerKm * distance;
+      const totalPriceFixed = (totalRentalPrice / 100).toFixed(2);
 
       return (
         <div className="m-1.5 " key={i}>
@@ -32,12 +38,16 @@ export default function MyApp() {
             <figure>
               <img src={data.pictureUrl} alt={altText} />
             </figure>
-            <div className="card-body">
+            <div className="card-body font-sans">
               <h2 className="card-title font-sans">
                 {data.brand} {data.model}
               </h2>
-              <p className="font-sans">{priceInEuros}€ / jour</p>
-              <p className="font-sans">{data.pricePerKm} € / Km</p>
+              <p>{pricePerDayInEuros} € / jour</p>
+              <p>{pricePerKmInEuros} € / Km</p>
+              <p>
+                Prix total de la location :{" "}
+                <span className="font-bold">{totalPriceFixed} €</span>
+              </p>
               {/* <p className="font-sans">
                 {data.availability.maxDuration} jour
               </p>
@@ -77,10 +87,10 @@ export default function MyApp() {
 
           {/* Radial Gradient to prevent sharp edges */}
           <div className="absolute inset-0 w-full h-full [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
-          <p className="text-xl m-3 text-center text-white px-3 font-sans">
-            Location de voiture entre particuliers et pros
-          </p>
         </div>
+        <p className="lg:text-xl m-3 text-center text-white px-3 font-sans">
+          Location de voiture entre particuliers et pros
+        </p>
       </div>
 
       {/* CARS CARDS  */}
